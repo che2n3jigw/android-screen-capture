@@ -38,6 +38,7 @@ class ScreenCaptureForegroundService : Service() {
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var screenRecorder: ScreenRecorder? = null
+    private var audioCaptureController: AudioCaptureController? = null
     private var mediaProjectionCallback = object : MediaProjection.Callback() {
         override fun onStop() {
             super.onStop()
@@ -106,6 +107,7 @@ class ScreenCaptureForegroundService : Service() {
         mediaProjection?.registerCallback(mediaProjectionCallback, null)
 
         // --- 4. 初始化和准备 ScreenRecorder ---
+        audioCaptureController = AudioCaptureController(this)
         try {
             screenRecorder = ScreenRecorder(this, width, height)
             screenRecorder?.prepare()
@@ -129,6 +131,9 @@ class ScreenCaptureForegroundService : Service() {
 
         // --- 6. 开始录制 ---
         screenRecorder?.start()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            audioCaptureController?.start(mediaProjection)
+        }
 
         return START_STICKY
     }
@@ -173,6 +178,9 @@ class ScreenCaptureForegroundService : Service() {
      * 统一的资源释放方法。
      */
     private fun releaseResources() {
+        audioCaptureController?.stop()
+        audioCaptureController = null
+
         // 按相反的顺序释放资源：recorder -> virtualDisplay -> projection
         screenRecorder?.stop()
         screenRecorder = null

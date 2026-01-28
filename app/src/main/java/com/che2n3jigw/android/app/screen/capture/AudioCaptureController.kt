@@ -49,7 +49,8 @@ class AudioCaptureController(context: Context) {
 
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    fun start(projection: MediaProjection) {
+    fun start(projection: MediaProjection?) {
+        projection ?: return
         if (isRunning) return
 
         // 1. 创建捕获配置（基于用户授权的 MediaProjection）
